@@ -1,0 +1,830 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  # AWS Connect Instance
+  MyConnectInstance:
+    Type: AWS::Connect::Instance
+    Properties:
+      Attributes:
+        InboundCalls: true
+        OutboundCalls: true
+      IdentityManagementType: "CONNECT_MANAGED"
+      InstanceAlias: "devmnk"
+
+  # AWS Connect Hours of Operation
+  MyOperationHours:
+    Type: AWS::Connect::HoursOfOperation
+    Properties:
+      Config:
+      # You can configure it as you want
+        - Day: MONDAY
+          EndTime:
+            Hours: 8
+            Minutes: 0
+          StartTime:
+            Hours: 8
+            Minutes: 0
+      Description: "my ops hrs"
+      InstanceArn: !GetAtt MyConnectInstance.Arn
+      Name: "my-hours"
+      TimeZone: "Pacific/Midway" # Set your prefered timezone
+
+  # AWS Connect Queue
+  MyQueue:
+    Type: AWS::Connect::Queue
+    Properties:
+      Description: "hold test"
+      HoursOfOperationArn: !GetAtt MyOperationHours.HoursOfOperationArn
+      InstanceArn: !GetAtt MyConnectInstance.Arn
+      MaxContacts: 10
+      Name: "my-queue"
+
+  # AWS Connect Routing Profile
+  MyRoutingProfile:
+    Type: AWS::Connect::RoutingProfile
+    Properties:
+      DefaultOutboundQueueArn: !GetAtt MyQueue.QueueArn
+      Description: "Test Profile"
+      InstanceArn: !GetAtt MyConnectInstance.Arn
+      Name: "my-routing-profile"
+      MediaConcurrencies:
+        - Channel: "VOICE"
+          Concurrency: 1
+
+  # AWS Connect Security Profile with some specific permissions
+  MySecurityProfile:
+    Type: AWS::Connect::SecurityProfile
+    Properties:
+      InstanceArn: !GetAtt MyConnectInstance.Arn
+      SecurityProfileName: "my-security-profile"
+      Permissions:
+        - Prompts.Create
+        - Prompts.Delete
+        - Prompts.Edit
+        - Prompts.View
+        - ContactFlows.Create
+        - ContactFlows.Delete
+        - ContactFlows.Edit
+        - ContactFlows.Publish
+        - ContactFlows.View
+        - ContactFlowModules.Create
+        - ContactFlowModules.Delete
+        - ContactFlowModules.Edit
+        - ContactFlowModules.Publish
+        - ContactFlowModules.View
+        - PhoneNumbers.Claim
+        - PhoneNumbers.Edit
+        - PhoneNumbers.Release
+        - PhoneNumbers.View
+        - ChatTestMode
+        - Views.View
+        - RoutingPolicies.Create
+        #  Add more permissions as needed
+
+  # AWS Connect User
+  MyConnectInstanceUser:
+    Type: AWS::Connect::User
+    Properties:
+      InstanceArn: !GetAtt MyConnectInstance.Arn
+      IdentityInfo:
+        Email: "test@gmail.com" # Put user's email
+        FirstName: "test"
+        LastName: "user"
+        Mobile: "+911234567890" # Put user's mobile with country-code
+      Username: "tstusr"
+      Password: "Aa123456"
+      PhoneConfig:
+        PhoneType: "SOFT_PHONE"
+      RoutingProfileArn: !GetAtt MyRoutingProfile.RoutingProfileArn
+      SecurityProfileArns:
+        - !GetAtt MySecurityProfile.SecurityProfileArn
+
+  # AWS Connect Phone Number
+  MyPhoneNumber:
+    Type: AWS::Connect::PhoneNumber
+    Properties:
+      CountryCode: "US"
+      Description: "my-number"
+      Prefix: "+1"
+      TargetArn: !GetAtt MyConnectInstance.Arn
+      Type: TOLL_FREE
+
+  # AWS Connect Contact Flow For Post Call Survey
+  MyContactFlow:
+    Type: AWS::Connect::ContactFlow
+    Properties:
+      Description: "my-flow"
+      InstanceArn: !GetAtt MyConnectInstance.Arn
+      Name: "my-flow"
+      State: "ACTIVE"
+      Type: "CONTACT_FLOW"
+      Content: |
+        {
+        "Version": "2019-10-30",
+        "StartAction": "f0dfcd07-d869-480e-97f2-2cfb52f8271e",
+        "Metadata": {
+            "entryPointPosition": {
+                "x": 14.4,
+                "y": 14.4
+            },
+            "ActionMetadata": {
+                "f0dfcd07-d869-480e-97f2-2cfb52f8271e": {
+                    "position": {
+                        "x": 196,
+                        "y": 16
+                    }
+                },
+                "459ba97a-9c1c-4d9d-a0a6-46f607e5e4db": {
+                    "position": {
+                        "x": 194.4,
+                        "y": 414.4
+                    }
+                },
+                "55021dee-7827-467e-a389-7a85ffffa14e": {
+                    "position": {
+                        "x": 194.4,
+                        "y": 196
+                    },
+                    "parameters": {
+                        "Attributes": {
+                            "CustomerIdentification": {
+                                "useDynamic": true
+                            }
+                        }
+                    },
+                    "dynamicParams": [
+                        "CustomerIdentification"
+                    ]
+                },
+                "f8625af1-e038-4022-af88-30940e209db9": {
+                    "position": {
+                        "x": 181.6,
+                        "y": 588
+                    },
+                    "overrideConsoleVoice": false
+                },
+                "92d04279-890e-4f2b-a16c-ac9616f82ed4": {
+                    "position": {
+                        "x": 659.2,
+                        "y": 44
+                    },
+                    "dynamicParams": []
+                },
+                "f47a9632-b780-4184-99f5-94218c82711c": {
+                    "position": {
+                        "x": 652.8,
+                        "y": 244.8
+                    },
+                    "dynamicParams": []
+                },
+                "2120198a-4f70-419d-b7a3-4569131dafd5": {
+                    "position": {
+                        "x": 649.6,
+                        "y": 451.2
+                    },
+                    "dynamicParams": []
+                },
+                "3d85d0d7-368a-439d-987c-c22327f39491": {
+                    "position": {
+                        "x": 648,
+                        "y": 644.8
+                    },
+                    "dynamicParams": []
+                },
+                "3f067272-3d14-4559-804a-a05ef235ccc5": {
+                    "position": {
+                        "x": 176.8,
+                        "y": 744
+                    },
+                    "conditionMetadata": [
+                        {
+                            "id": "655a84ba-e2f4-427a-adb4-f78961282e59",
+                            "value": "1"
+                        },
+                        {
+                            "id": "e24c293d-4f98-4bf8-9f93-ac59bb51306e",
+                            "value": "2"
+                        },
+                        {
+                            "id": "27c9dde8-7191-468e-aa8e-7c55e549f428",
+                            "value": "3"
+                        },
+                        {
+                            "id": "e9a78e34-a49c-421f-ac1a-1ef87cf0afd4",
+                            "value": "4"
+                        },
+                        {
+                            "id": "99fa45ec-1432-425b-a294-58457d840040",
+                            "value": "5"
+                        }
+                    ]
+                },
+                "f90e212c-6a01-46fc-b3f6-4339a10c58de": {
+                    "position": {
+                        "x": 640,
+                        "y": 838.4
+                    },
+                    "dynamicParams": []
+                },
+                "513bc7d6-fdf6-4d08-ab6d-bfa8080e56d3": {
+                    "position": {
+                        "x": 1433.6,
+                        "y": 49.6
+                    },
+                    "dynamicParams": []
+                },
+                "374909c6-5c3d-4352-b9f1-a6a2c5ae1426": {
+                    "position": {
+                        "x": 1435.2,
+                        "y": 247.2
+                    },
+                    "dynamicParams": []
+                },
+                "5e574ff8-65b6-4099-b110-223ae98eafd1": {
+                    "position": {
+                        "x": 1440,
+                        "y": 452
+                    },
+                    "dynamicParams": []
+                },
+                "28c5a4e4-4946-40bd-a471-e405dbbd1aeb": {
+                    "position": {
+                        "x": 1439.2,
+                        "y": 650.4
+                    },
+                    "dynamicParams": []
+                },
+                "661d63d8-f2f2-475c-ac3d-0fb1916df81f": {
+                    "position": {
+                        "x": 1078.4,
+                        "y": 358.4
+                    },
+                    "conditionMetadata": [
+                        {
+                            "id": "fb516272-f409-4bfa-b554-b18899f44210",
+                            "value": "1"
+                        },
+                        {
+                            "id": "05caa940-30f2-4212-bf3b-72bad6725f9e",
+                            "value": "2"
+                        },
+                        {
+                            "id": "66f4f77a-be85-45af-815a-a9583714109e",
+                            "value": "3"
+                        },
+                        {
+                            "id": "c1494f7f-10ed-4930-bf24-49f56c4306a4",
+                            "value": "4"
+                        },
+                        {
+                            "id": "59482ad6-b35f-4d50-87ba-2371331feb97",
+                            "value": "5"
+                        }
+                    ]
+                },
+                "814ce992-a237-4000-8122-2be4f5ab3711": {
+                    "position": {
+                        "x": 1440.8,
+                        "y": 845.6
+                    },
+                    "dynamicParams": []
+                },
+                "8d081834-3074-4591-86ce-adde193cf484": {
+                    "position": {
+                        "x": 1904,
+                        "y": 242.4
+                    },
+                    "conditionMetadata": [],
+                    "countryCodePrefix": "+1"
+                },
+                "c9458cef-1791-4988-baef-f6b7e5f5dc79": {
+                    "position": {
+                        "x": 1952.8,
+                        "y": 456
+                    },
+                    "parameters": {
+                        "Attributes": {
+                            "recomend": {
+                                "useDynamic": true
+                            }
+                        }
+                    },
+                    "dynamicParams": [
+                        "recomend"
+                    ]
+                },
+                "16739cac-f7e5-4b2d-858e-b91035157a47": {
+                    "position": {
+                        "x": 2168.8,
+                        "y": 1273.6
+                    }
+                },
+                "e52b782b-470b-423b-a1c5-63ebec0cac31": {
+                    "position": {
+                        "x": 1952,
+                        "y": 681.6
+                    },
+                    "dynamicParams": []
+                },
+                "0d9a4bb3-4e67-4289-8435-1a9ec36718a0": {
+                    "position": {
+                        "x": 1868.8,
+                        "y": 1171.2
+                    }
+                }
+            },
+            "Annotations": [],
+            "name": "900.Post Call Survey",
+            "description": "",
+            "type": "contactFlow",
+            "status": "published",
+            "hash": {}
+        },
+        "Actions": [
+            {
+                "Parameters": {
+                    "FlowLoggingBehavior": "Enabled"
+                },
+                "Identifier": "f0dfcd07-d869-480e-97f2-2cfb52f8271e",
+                "Type": "UpdateFlowLoggingBehavior",
+                "Transitions": {
+                    "NextAction": "55021dee-7827-467e-a389-7a85ffffa14e"
+                }
+            },
+            {
+                "Parameters": {
+                    "RecordingBehavior": {
+                        "RecordedParticipants": [
+                            "Agent",
+                            "Customer"
+                        ]
+                    }
+                },
+                "Identifier": "459ba97a-9c1c-4d9d-a0a6-46f607e5e4db",
+                "Type": "UpdateContactRecordingBehavior",
+                "Transitions": {
+                    "NextAction": "f8625af1-e038-4022-af88-30940e209db9"
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "CustomerIdentification": "$.CustomerEndpoint.Address"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "55021dee-7827-467e-a389-7a85ffffa14e",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "459ba97a-9c1c-4d9d-a0a6-46f607e5e4db",
+                    "Errors": [
+                        {
+                            "NextAction": "459ba97a-9c1c-4d9d-a0a6-46f607e5e4db",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "TextToSpeechVoice": "Joanna"
+                },
+                "Identifier": "f8625af1-e038-4022-af88-30940e209db9",
+                "Type": "UpdateContactTextToSpeechVoice",
+                "Transitions": {
+                    "NextAction": "3f067272-3d14-4559-804a-a05ef235ccc5"
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "agent_satisfaction": "1",
+                        "surveyScoreOneDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=1"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "92d04279-890e-4f2b-a16c-ac9616f82ed4",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                    "Errors": [
+                        {
+                            "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "agent_satisfaction": "2",
+                        "surveyScoreOneDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=2"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "f47a9632-b780-4184-99f5-94218c82711c",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                    "Errors": [
+                        {
+                            "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "agent_satisfaction": "3",
+                        "surveyScoreOneDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=3"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "2120198a-4f70-419d-b7a3-4569131dafd5",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                    "Errors": [
+                        {
+                            "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "agent_satisfaction": "4",
+                        "surveyScoreOneDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=4"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "3d85d0d7-368a-439d-987c-c22327f39491",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                    "Errors": [
+                        {
+                            "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "SSML": "<speak>\n<p>With 5 being extremely satisfied and 1 being not at all satisfied, how satisfied are you with the service you received from your agent who assisted you today</p>\n</speak>",
+                    "StoreInput": "False",
+                    "InputTimeLimitSeconds": "5"
+                },
+                "Identifier": "3f067272-3d14-4559-804a-a05ef235ccc5",
+                "Type": "GetParticipantInput",
+                "Transitions": {
+                    "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                    "Conditions": [
+                        {
+                            "NextAction": "92d04279-890e-4f2b-a16c-ac9616f82ed4",
+                            "Condition": {
+                                "Operator": "Equals",
+                                "Operands": [
+                                    "1"
+                                ]
+                            }
+                        },
+                        {
+                            "NextAction": "f47a9632-b780-4184-99f5-94218c82711c",
+                            "Condition": {
+                                "Operator": "Equals",
+                                "Operands": [
+                                    "2"
+                                ]
+                            }
+                        },
+                        {
+                            "NextAction": "2120198a-4f70-419d-b7a3-4569131dafd5",
+                            "Condition": {
+                                "Operator": "Equals",
+                                "Operands": [
+                                    "3"
+                                ]
+                            }
+                        },
+                        {
+                            "NextAction": "3d85d0d7-368a-439d-987c-c22327f39491",
+                            "Condition": {
+                                "Operator": "Equals",
+                                "Operands": [
+                                    "4"
+                                ]
+                            }
+                        },
+                        {
+                            "NextAction": "f90e212c-6a01-46fc-b3f6-4339a10c58de",
+                            "Condition": {
+                                "Operator": "Equals",
+                                "Operands": [
+                                    "5"
+                                ]
+                            }
+                        }
+                    ],
+                    "Errors": [
+                        {
+                            "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                            "ErrorType": "InputTimeLimitExceeded"
+                        },
+                        {
+                            "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                            "ErrorType": "NoMatchingCondition"
+                        },
+                        {
+                            "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "agent_satisfaction": "5",
+                        "surveyScoreOneDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=5"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "f90e212c-6a01-46fc-b3f6-4339a10c58de",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                    "Errors": [
+                        {
+                            "NextAction": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "satisfied": "1",
+                        "surveyScoreTwoDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=1"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "513bc7d6-fdf6-4d08-ab6d-bfa8080e56d3",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                    "Errors": [
+                        {
+                            "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "satisfied": "2",
+                        "surveyScoreTwoDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=2"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "374909c6-5c3d-4352-b9f1-a6a2c5ae1426",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                    "Errors": [
+                        {
+                            "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "satisfied": "3",
+                        "surveyScoreTwoDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=3"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "5e574ff8-65b6-4099-b110-223ae98eafd1",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                    "Errors": [
+                        {
+                            "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "satisfied": "4",
+                        "surveyScoreTwoDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=4"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "28c5a4e4-4946-40bd-a471-e405dbbd1aeb",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                    "Errors": [
+                        {
+                            "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "StoreInput": "False",
+                    "InputTimeLimitSeconds": "5",
+                    "SSML": "<speak>\n<p>With 5 being extremely satisfied and 1 being not at all satisfied, how satisfied are you overall with service</p>\n</speak>"
+                },
+                "Identifier": "661d63d8-f2f2-475c-ac3d-0fb1916df81f",
+                "Type": "GetParticipantInput",
+                "Transitions": {
+                    "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                    "Conditions": [
+                        {
+                            "NextAction": "513bc7d6-fdf6-4d08-ab6d-bfa8080e56d3",
+                            "Condition": {
+                                "Operator": "Equals",
+                                "Operands": [
+                                    "1"
+                                ]
+                            }
+                        },
+                        {
+                            "NextAction": "374909c6-5c3d-4352-b9f1-a6a2c5ae1426",
+                            "Condition": {
+                                "Operator": "Equals",
+                                "Operands": [
+                                    "2"
+                                ]
+                            }
+                        },
+                        {
+                            "NextAction": "5e574ff8-65b6-4099-b110-223ae98eafd1",
+                            "Condition": {
+                                "Operator": "Equals",
+                                "Operands": [
+                                    "3"
+                                ]
+                            }
+                        },
+                        {
+                            "NextAction": "28c5a4e4-4946-40bd-a471-e405dbbd1aeb",
+                            "Condition": {
+                                "Operator": "Equals",
+                                "Operands": [
+                                    "4"
+                                ]
+                            }
+                        },
+                        {
+                            "NextAction": "814ce992-a237-4000-8122-2be4f5ab3711",
+                            "Condition": {
+                                "Operator": "Equals",
+                                "Operands": [
+                                    "5"
+                                ]
+                            }
+                        }
+                    ],
+                    "Errors": [
+                        {
+                            "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                            "ErrorType": "InputTimeLimitExceeded"
+                        },
+                        {
+                            "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                            "ErrorType": "NoMatchingCondition"
+                        },
+                        {
+                            "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "satisfied": "5",
+                        "surveyScoreTwoDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=5"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "814ce992-a237-4000-8122-2be4f5ab3711",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                    "Errors": [
+                        {
+                            "NextAction": "8d081834-3074-4591-86ce-adde193cf484",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "StoreInput": "True",
+                    "InputTimeLimitSeconds": "5",
+                    "SSML": "<speak>\n<p>With 10 being extremely likely, and 1 being not at all likely, how likely are you to recommend us to a friend</p>\n</speak>",
+                    "DTMFConfiguration": {
+                        "DisableCancelKey": "False"
+                    },
+                    "InputValidation": {
+                        "CustomValidation": {
+                            "MaximumLength": "2"
+                        }
+                    }
+                },
+                "Identifier": "8d081834-3074-4591-86ce-adde193cf484",
+                "Type": "GetParticipantInput",
+                "Transitions": {
+                    "NextAction": "c9458cef-1791-4988-baef-f6b7e5f5dc79",
+                    "Errors": [
+                        {
+                            "NextAction": "c9458cef-1791-4988-baef-f6b7e5f5dc79",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "recomend": "$.StoredCustomerInput"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "c9458cef-1791-4988-baef-f6b7e5f5dc79",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "e52b782b-470b-423b-a1c5-63ebec0cac31",
+                    "Errors": [
+                        {
+                            "NextAction": "e52b782b-470b-423b-a1c5-63ebec0cac31",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {},
+                "Identifier": "16739cac-f7e5-4b2d-858e-b91035157a47",
+                "Type": "DisconnectParticipant",
+                "Transitions": {}
+            },
+            {
+                "Parameters": {
+                    "Attributes": {
+                        "surveyScoreThreeDetailed": "contact=$.InitialContactId, agent=$.Attributes.lastAgent, score=$.Attributes.surveyScore3"
+                    },
+                    "TargetContact": "Current"
+                },
+                "Identifier": "e52b782b-470b-423b-a1c5-63ebec0cac31",
+                "Type": "UpdateContactAttributes",
+                "Transitions": {
+                    "NextAction": "0d9a4bb3-4e67-4289-8435-1a9ec36718a0",
+                    "Errors": [
+                        {
+                            "NextAction": "0d9a4bb3-4e67-4289-8435-1a9ec36718a0",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            },
+            {
+                "Parameters": {
+                    "SSML": "<speak>\n<p>Thank you for your feedback. Goodbye</p>\n</speak>"
+                },
+                "Identifier": "0d9a4bb3-4e67-4289-8435-1a9ec36718a0",
+                "Type": "MessageParticipant",
+                "Transitions": {
+                    "NextAction": "16739cac-f7e5-4b2d-858e-b91035157a47",
+                    "Errors": [
+                        {
+                            "NextAction": "16739cac-f7e5-4b2d-858e-b91035157a47",
+                            "ErrorType": "NoMatchingError"
+                        }
+                    ]
+                }
+            }
+          ]
+        }
